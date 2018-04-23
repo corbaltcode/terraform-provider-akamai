@@ -741,7 +741,7 @@ func resourceFastDNSZoneCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Transform the record data from the terraform config to a local type
 	log.Printf("[DEBUG] [Akamai FastDNS] Adding records to zone")
-	unmarshalResourceData(d, zone)
+	unmarshalResourceData(d, zone, false)
 
 	// Save the zone to the API
 	log.Printf("[DEBUG] [Akamai FastDNS] Saving zone")
@@ -776,8 +776,11 @@ func assignFields(record dns.DNSRecord, d map[string]interface{}) {
 // This is on purpose because the Akamai API will inject several
 // Default records to a given zone and we don't want those to show up
 // In diffs or in acceptance tests
-func mergeConfigs(recordType string, records []interface{}, s *schema.Resource, d *schema.ResourceData) *schema.Set {
+func mergeConfigs(recordType string, records []interface{}, s *schema.Resource, d *schema.ResourceData, isDelete bool) *schema.Set {
 	recordsInStateFile, recordsInConfigFile := d.GetChange(recordType)
+	if isDelete {
+		recordsInConfigFile = new(schema.Set)
+	}
 	recordsInAPI := schema.NewSet(
 		schema.HashResource(s.Schema[recordType].Elem.(*schema.Resource)),
 		records,
@@ -789,15 +792,15 @@ func mergeConfigs(recordType string, records []interface{}, s *schema.Resource, 
 }
 
 // Unmarshal the config data from the terraform config file to our local types so it can be saved
-func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
+func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone, isDelete bool) {
 	s := resourceFastDNSZone()
 
-	if d.HasChange("a") {
+	if d.HasChange("a") || isDelete {
 		zoneARecords := make([]interface{}, len(zone.Zone.A))
 		for k, v := range zone.Zone.A {
 			zoneARecords[k] = v.ToMap()
 		}
-		mergedARecords := mergeConfigs("a", zoneARecords, s, d)
+		mergedARecords := mergeConfigs("a", zoneARecords, s, d, isDelete)
 		zone.Zone.A = nil
 		for _, val := range mergedARecords.List() {
 			record := dns.NewARecord()
@@ -806,12 +809,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("aaaa") {
+	if d.HasChange("aaaa") || isDelete {
 		zoneAaaaRecords := make([]interface{}, len(zone.Zone.Aaaa))
 		for k, v := range zone.Zone.Aaaa {
 			zoneAaaaRecords[k] = v.ToMap()
 		}
-		mergedAaaaRecords := mergeConfigs("aaaa", zoneAaaaRecords, s, d)
+		mergedAaaaRecords := mergeConfigs("aaaa", zoneAaaaRecords, s, d, isDelete)
 		zone.Zone.Aaaa = nil
 		for _, val := range mergedAaaaRecords.List() {
 			record := dns.NewAaaaRecord()
@@ -820,12 +823,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("afsdb") {
+	if d.HasChange("afsdb") || isDelete {
 		zoneAfsdbRecords := make([]interface{}, len(zone.Zone.Afsdb))
 		for k, v := range zone.Zone.Afsdb {
 			zoneAfsdbRecords[k] = v.ToMap()
 		}
-		mergedAfsdbRecords := mergeConfigs("afsdb", zoneAfsdbRecords, s, d)
+		mergedAfsdbRecords := mergeConfigs("afsdb", zoneAfsdbRecords, s, d, isDelete)
 		zone.Zone.Afsdb = nil
 		for _, val := range mergedAfsdbRecords.List() {
 			record := dns.NewAfsdbRecord()
@@ -834,12 +837,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("cname") {
+	if d.HasChange("cname") || isDelete {
 		zoneCnameRecords := make([]interface{}, len(zone.Zone.Cname))
 		for k, v := range zone.Zone.Cname {
 			zoneCnameRecords[k] = v.ToMap()
 		}
-		mergedCnameRecords := mergeConfigs("cname", zoneCnameRecords, s, d)
+		mergedCnameRecords := mergeConfigs("cname", zoneCnameRecords, s, d, isDelete)
 		zone.Zone.Cname = nil
 		for _, val := range mergedCnameRecords.List() {
 			record := dns.NewCnameRecord()
@@ -848,12 +851,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("dnskey") {
+	if d.HasChange("dnskey") || isDelete {
 		zoneDnskeyRecords := make([]interface{}, len(zone.Zone.Dnskey))
 		for k, v := range zone.Zone.Dnskey {
 			zoneDnskeyRecords[k] = v.ToMap()
 		}
-		mergedDnskeyRecords := mergeConfigs("dnskey", zoneDnskeyRecords, s, d)
+		mergedDnskeyRecords := mergeConfigs("dnskey", zoneDnskeyRecords, s, d, isDelete)
 		zone.Zone.Dnskey = nil
 		for _, val := range mergedDnskeyRecords.List() {
 			record := dns.NewDnskeyRecord()
@@ -862,12 +865,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("ds") {
+	if d.HasChange("ds") || isDelete {
 		zoneDsRecords := make([]interface{}, len(zone.Zone.Ds))
 		for k, v := range zone.Zone.Ds {
 			zoneDsRecords[k] = v.ToMap()
 		}
-		mergedDsRecords := mergeConfigs("ds", zoneDsRecords, s, d)
+		mergedDsRecords := mergeConfigs("ds", zoneDsRecords, s, d, isDelete)
 		zone.Zone.Ds = nil
 		for _, val := range mergedDsRecords.List() {
 			record := dns.NewDsRecord()
@@ -876,12 +879,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("hinfo") {
+	if d.HasChange("hinfo") || isDelete {
 		zoneHinfoRecords := make([]interface{}, len(zone.Zone.Hinfo))
 		for k, v := range zone.Zone.Hinfo {
 			zoneHinfoRecords[k] = v.ToMap()
 		}
-		mergedHinfoRecords := mergeConfigs("hinfo", zoneHinfoRecords, s, d)
+		mergedHinfoRecords := mergeConfigs("hinfo", zoneHinfoRecords, s, d, isDelete)
 		zone.Zone.Hinfo = nil
 		for _, val := range mergedHinfoRecords.List() {
 			record := dns.NewHinfoRecord()
@@ -890,12 +893,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("loc") {
+	if d.HasChange("loc") || isDelete {
 		zoneLocRecords := make([]interface{}, len(zone.Zone.Loc))
 		for k, v := range zone.Zone.Loc {
 			zoneLocRecords[k] = v.ToMap()
 		}
-		mergedLocRecords := mergeConfigs("loc", zoneLocRecords, s, d)
+		mergedLocRecords := mergeConfigs("loc", zoneLocRecords, s, d, isDelete)
 		zone.Zone.Loc = nil
 		for _, val := range mergedLocRecords.List() {
 			record := dns.NewLocRecord()
@@ -904,12 +907,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("mx") {
+	if d.HasChange("mx") || isDelete {
 		zoneMxRecords := make([]interface{}, len(zone.Zone.Mx))
 		for k, v := range zone.Zone.Mx {
 			zoneMxRecords[k] = v.ToMap()
 		}
-		mergedMxRecords := mergeConfigs("mx", zoneMxRecords, s, d)
+		mergedMxRecords := mergeConfigs("mx", zoneMxRecords, s, d, isDelete)
 		zone.Zone.Mx = nil
 		for _, val := range mergedMxRecords.List() {
 			record := dns.NewMxRecord()
@@ -918,12 +921,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("naptr") {
+	if d.HasChange("naptr") || isDelete {
 		zoneNaptrRecords := make([]interface{}, len(zone.Zone.Naptr))
 		for k, v := range zone.Zone.Naptr {
 			zoneNaptrRecords[k] = v.ToMap()
 		}
-		mergedNaptrRecords := mergeConfigs("naptr", zoneNaptrRecords, s, d)
+		mergedNaptrRecords := mergeConfigs("naptr", zoneNaptrRecords, s, d, isDelete)
 		zone.Zone.Naptr = nil
 		for _, val := range mergedNaptrRecords.List() {
 			record := dns.NewNaptrRecord()
@@ -932,12 +935,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("ns") {
+	if d.HasChange("ns") || isDelete {
 		zoneNsRecords := make([]interface{}, len(zone.Zone.Ns))
 		for k, v := range zone.Zone.Ns {
 			zoneNsRecords[k] = v.ToMap()
 		}
-		mergedNsRecords := mergeConfigs("ns", zoneNsRecords, s, d)
+		mergedNsRecords := mergeConfigs("ns", zoneNsRecords, s, d, isDelete)
 		zone.Zone.Ns = nil
 		for _, val := range mergedNsRecords.List() {
 			record := dns.NewNsRecord()
@@ -946,12 +949,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("nsec3") {
+	if d.HasChange("nsec3") || isDelete {
 		zoneNsec3Records := make([]interface{}, len(zone.Zone.Nsec3))
 		for k, v := range zone.Zone.Nsec3 {
 			zoneNsec3Records[k] = v.ToMap()
 		}
-		mergedNsec3Records := mergeConfigs("nsec3", zoneNsec3Records, s, d)
+		mergedNsec3Records := mergeConfigs("nsec3", zoneNsec3Records, s, d, isDelete)
 		zone.Zone.Nsec3 = nil
 		for _, val := range mergedNsec3Records.List() {
 			record := dns.NewNsec3Record()
@@ -960,12 +963,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("nsec3param") {
+	if d.HasChange("nsec3param") || isDelete {
 		zoneNsec3paramRecords := make([]interface{}, len(zone.Zone.Nsec3param))
 		for k, v := range zone.Zone.Nsec3param {
 			zoneNsec3paramRecords[k] = v.ToMap()
 		}
-		mergedNsec3paramRecords := mergeConfigs("nsec3param", zoneNsec3paramRecords, s, d)
+		mergedNsec3paramRecords := mergeConfigs("nsec3param", zoneNsec3paramRecords, s, d, isDelete)
 		zone.Zone.Nsec3param = nil
 		for _, val := range mergedNsec3paramRecords.List() {
 			record := dns.NewNsec3paramRecord()
@@ -974,12 +977,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("ptr") {
+	if d.HasChange("ptr") || isDelete {
 		zonePtrRecords := make([]interface{}, len(zone.Zone.Ptr))
 		for k, v := range zone.Zone.Ptr {
 			zonePtrRecords[k] = v.ToMap()
 		}
-		mergedPtrRecords := mergeConfigs("ptr", zonePtrRecords, s, d)
+		mergedPtrRecords := mergeConfigs("ptr", zonePtrRecords, s, d, isDelete)
 		zone.Zone.Ptr = nil
 		for _, val := range mergedPtrRecords.List() {
 			record := dns.NewPtrRecord()
@@ -988,12 +991,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("rp") {
+	if d.HasChange("rp") || isDelete {
 		zoneRpRecords := make([]interface{}, len(zone.Zone.Rp))
 		for k, v := range zone.Zone.Rp {
 			zoneRpRecords[k] = v.ToMap()
 		}
-		mergedRpRecords := mergeConfigs("rp", zoneRpRecords, s, d)
+		mergedRpRecords := mergeConfigs("rp", zoneRpRecords, s, d, isDelete)
 		zone.Zone.Rp = nil
 		for _, val := range mergedRpRecords.List() {
 			record := dns.NewRpRecord()
@@ -1002,12 +1005,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("rrsig") {
+	if d.HasChange("rrsig") || isDelete {
 		zoneRrsigRecords := make([]interface{}, len(zone.Zone.Rrsig))
 		for k, v := range zone.Zone.Rrsig {
 			zoneRrsigRecords[k] = v.ToMap()
 		}
-		mergedRrsigRecords := mergeConfigs("rrsig", zoneRrsigRecords, s, d)
+		mergedRrsigRecords := mergeConfigs("rrsig", zoneRrsigRecords, s, d, isDelete)
 		zone.Zone.Rrsig = nil
 		for _, val := range mergedRrsigRecords.List() {
 			record := dns.NewRrsigRecord()
@@ -1016,10 +1019,10 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("soa") {
+	if d.HasChange("soa") || isDelete {
 		zoneSoaRecords := make([]interface{}, 1)
 		zoneSoaRecords[0] = zone.Zone.Soa.ToMap()
-		mergedSoaRecords := mergeConfigs("soa", zoneSoaRecords, s, d)
+		mergedSoaRecords := mergeConfigs("soa", zoneSoaRecords, s, d, isDelete)
 		zone.Zone.Soa = nil
 		for _, val := range mergedSoaRecords.List() {
 			record := dns.NewSoaRecord()
@@ -1028,12 +1031,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("spf") {
+	if d.HasChange("spf") || isDelete {
 		zoneSpfRecords := make([]interface{}, len(zone.Zone.Spf))
 		for k, v := range zone.Zone.Spf {
 			zoneSpfRecords[k] = v.ToMap()
 		}
-		mergedSpfRecords := mergeConfigs("spf", zoneSpfRecords, s, d)
+		mergedSpfRecords := mergeConfigs("spf", zoneSpfRecords, s, d, isDelete)
 		zone.Zone.Spf = nil
 		for _, val := range mergedSpfRecords.List() {
 			record := dns.NewSpfRecord()
@@ -1042,12 +1045,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("srv") {
+	if d.HasChange("srv") || isDelete {
 		zoneSrvRecords := make([]interface{}, len(zone.Zone.Srv))
 		for k, v := range zone.Zone.Srv {
 			zoneSrvRecords[k] = v.ToMap()
 		}
-		mergedSrvRecords := mergeConfigs("srv", zoneSrvRecords, s, d)
+		mergedSrvRecords := mergeConfigs("srv", zoneSrvRecords, s, d, isDelete)
 		zone.Zone.Srv = nil
 		for _, val := range mergedSrvRecords.List() {
 			record := dns.NewSrvRecord()
@@ -1056,12 +1059,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("sshfp") {
+	if d.HasChange("sshfp") || isDelete {
 		zoneSshfpRecords := make([]interface{}, len(zone.Zone.Sshfp))
 		for k, v := range zone.Zone.Sshfp {
 			zoneSshfpRecords[k] = v.ToMap()
 		}
-		mergedSshfpRecords := mergeConfigs("sshfp", zoneSshfpRecords, s, d)
+		mergedSshfpRecords := mergeConfigs("sshfp", zoneSshfpRecords, s, d, isDelete)
 		zone.Zone.Sshfp = nil
 		for _, val := range mergedSshfpRecords.List() {
 			record := dns.NewSshfpRecord()
@@ -1070,12 +1073,12 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 		}
 	}
 
-	if d.HasChange("txt") {
+	if d.HasChange("txt") || isDelete {
 		zoneTxtRecords := make([]interface{}, len(zone.Zone.Txt))
 		for k, v := range zone.Zone.Txt {
 			zoneTxtRecords[k] = v.ToMap()
 		}
-		mergedTxtRecords := mergeConfigs("txt", zoneTxtRecords, s, d)
+		mergedTxtRecords := mergeConfigs("txt", zoneTxtRecords, s, d, isDelete)
 		zone.Zone.Txt = nil
 		for _, val := range mergedTxtRecords.List() {
 			record := dns.NewTxtRecord()
@@ -1239,26 +1242,38 @@ func marshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 }
 
 func resourceFastDNSZoneDelete(d *schema.ResourceData, meta interface{}) error {
+	// Treat a delete like an update where all record types are empty.
+	// This prevents pre-existing records from being deleted.
+
+	// only allow one record to be updated at a time
+	// this prevents lost data if you are using a counter/dynamic variables
+	// in your config.tf which might overwrite each other
 	dnsWriteLock.Lock()
 	defer dnsWriteLock.Unlock()
 
+	// First try to get the zone from the API
 	hostname := d.Get("hostname").(string)
-
-	// find the zone first
 	log.Printf("[INFO] [Akamai FastDNS] Searching for zone [%s]", hostname)
-	zone, err := dns.GetZone(hostname)
-	if err != nil {
-		return err
+	zone, e := dns.GetZone(hostname)
+
+	if e != nil {
+		if dns.IsConfigDNSError(e) && e.(dns.ConfigDNSError).NotFound() == true {
+			fmt.Errorf("Trying to delete non-existent hostname '%s'", hostname)
+		} else {
+			return e
+		}
 	}
 
-	// 'delete' the zone - this is a soft delete which
-	// will just remove the non required records
-	err = zone.Delete()
-	if err != nil {
-		return err
-	}
+	// Transform the record data from the terraform config to a local type
+	log.Printf("[DEBUG] [Akamai FastDNS] Adding records to zone")
+	unmarshalResourceData(d, zone, true)
 
-	d.SetId("")
+	// Save the zone to the API
+	log.Printf("[DEBUG] [Akamai FastDNS] Saving zone")
+	e = zone.Save()
+	if e != nil {
+		return e
+	}
 
 	return nil
 }
