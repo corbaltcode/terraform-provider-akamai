@@ -27,6 +27,7 @@ func resourceFastDNSZone() *schema.Resource {
 			"hostname": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"a": {
 				Type:     schema.TypeSet,
