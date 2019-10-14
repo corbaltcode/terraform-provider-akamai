@@ -1019,13 +1019,17 @@ func unmarshalResourceData(d *schema.ResourceData, zone *dns.Zone, isDelete bool
 	}
 
 	if d.HasChange("soa") || isDelete {
+		soa := zone.Zone.Soa.ToMap()
+		convertSoaUintsToInts(soa)
 		zoneSoaRecords := make([]interface{}, 1)
-		zoneSoaRecords[0] = zone.Zone.Soa.ToMap()
+		zoneSoaRecords[0] = soa
 		mergedSoaRecords := mergeConfigs("soa", zoneSoaRecords, s, d, isDelete)
 		zone.Zone.Soa = nil
 		for _, val := range mergedSoaRecords.List() {
 			record := dns.NewSoaRecord()
-			assignFields(record, val.(map[string]interface{}))
+			soa := val.(map[string]interface{})
+			convertSoaIntsToUints(soa)
+			assignFields(record, soa)
 			zone.AddRecord(record)
 		}
 	}
@@ -1213,6 +1217,7 @@ func marshalResourceData(d *schema.ResourceData, zone *dns.Zone) {
 
 	soa := make([]map[string]interface{}, 1)
 	soa[0] = zone.Zone.Soa.ToMap()
+	convertSoaUintsToInts(soa[0])
 	d.Set("soa", soa)
 
 	spf := make([]map[string]interface{}, len(zone.Zone.Spf))
@@ -1290,4 +1295,19 @@ func saveZone(zone *dns.Zone) error {
 		zone.Zone.Soa.Serial += 1
 	}
 	return zone.Save()
+}
+
+// 'serial' and 'minimum' were changed from int to uint in v0.5.2 of the Akamai
+// client. Terraform schema doesn't support uint, so we use these functions to
+// convert during marshaling. The program will panic on overflow. This is
+// unlikely in practice because 'minimum' tends to be low, and 'serial' starts
+// as a UNIX time (much lower than max int) and increases by one when saved.
+func convertSoaUintsToInts(soa map[string]interface{}) {
+	soa["serial"] = int(soa["serial"].(uint))
+	soa["minimum"] = int(soa["minimum"].(uint))
+}
+
+func convertSoaIntsToUints(soa map[string]interface{}) {
+	soa["serial"] = uint(soa["serial"].(int))
+	soa["minimum"] = uint(soa["minimum"].(int))
 }
