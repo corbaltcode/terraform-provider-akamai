@@ -744,9 +744,7 @@ func resourceFastDNSZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] [Akamai FastDNS] Adding records to zone")
 	unmarshalResourceData(d, zone, false)
 
-	// Save the zone to the API
-	log.Printf("[DEBUG] [Akamai FastDNS] Saving zone")
-	e = zone.Save()
+	e = saveZone(zone)
 	if e != nil {
 		return e
 	}
@@ -1269,9 +1267,7 @@ func resourceFastDNSZoneDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] [Akamai FastDNS] Adding records to zone")
 	unmarshalResourceData(d, zone, true)
 
-	// Save the zone to the API
-	log.Printf("[DEBUG] [Akamai FastDNS] Saving zone")
-	e = zone.Save()
+	e = saveZone(zone)
 	if e != nil {
 		return e
 	}
@@ -1286,4 +1282,12 @@ func resourceFastDNSZoneExists(d *schema.ResourceData, meta interface{}) (bool, 
 	log.Printf("[INFO] [Akamai FastDNS] Searching for zone [%s]", hostname)
 	zone, err := dns.GetZone(hostname)
 	return zone != nil, err
+}
+
+func saveZone(zone *dns.Zone) error {
+	log.Printf("[DEBUG] [Akamai FastDNS] Saving zone")
+	if zone.Zone.Soa != nil {
+		zone.Zone.Soa.Serial += 1
+	}
+	return zone.Save()
 }
