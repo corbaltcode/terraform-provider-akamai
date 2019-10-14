@@ -3,7 +3,7 @@ package helper
 import (
 	"strconv"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type Elem map[string]interface{}

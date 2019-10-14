@@ -2,7 +2,7 @@ package akamai
 
 import (
 	papi "github.com/akamai/AkamaiOPEN-edgegrid-golang/papi-v1"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourcePropertyExists(d *schema.ResourceData, meta interface{}) (bool, error) {

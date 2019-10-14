@@ -1,7 +1,7 @@
 package akamai
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var akps_option *schema.Schema = &schema.Schema{

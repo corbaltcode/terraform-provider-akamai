@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	dns "github.com/akamai/AkamaiOPEN-edgegrid-golang/configdns-v1"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var dnsWriteLock sync.Mutex

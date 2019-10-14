@@ -6,8 +6,8 @@ import (
 	dns "github.com/akamai/AkamaiOPEN-edgegrid-golang/configdns-v1"
 	"github.com/akamai/AkamaiOPEN-edgegrid-golang/edgegrid"
 	papi "github.com/akamai/AkamaiOPEN-edgegrid-golang/papi-v1"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 type Config struct {
